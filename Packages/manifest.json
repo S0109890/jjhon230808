@@ -1,20 +1,21 @@
 {
-    "scopedRegistries": [
-      {
-        "name": "Unity NuGet",
-        "url": "https://unitynuget-registry.azurewebsites.net",
-        "scopes": [
-          "org.nuget"
-        ]
-      },
-      {
-          "name": "Keijiro",
-          "url": "https://registry.npmjs.com",
-          "scopes": [ "jp.keijiro" ]
-      }
-    ],
+  "scopedRegistries": [
+    {
+      "name": "Unity NuGet",
+      "url": "https://unitynuget-registry.azurewebsites.net",
+      "scopes": [
+        "org.nuget"
+      ]
+    },
+    {
+      "name": "Keijiro",
+      "url": "https://registry.npmjs.com",
+      "scopes": [
+        "jp.keijiro"
+      ]
+    }
+  ],
   "dependencies": {
-      "jp.keijiro.laspvfx": "1.0.2",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.ads": "4.4.2",
@@ -35,7 +36,10 @@
     "com.unity.timeline": "1.7.4",
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.8.0",
-    "com.unity.xr.legacyinputhelpers": "2.1.10",
+    "com.unity.xr.interaction.toolkit": "2.4.3",
+    "com.unity.xr.management": "4.3.3",
+    "com.unity.xr.oculus": "4.0.0",
+    "jp.keijiro.laspvfx": "1.0.2",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
