@@ -5,160 +5,279 @@ using UnityEngine.Assertions;
 
 namespace ProceduralToolkit.Samples
 {
-    public static class MeshGenerator
+    public partial class MeshGenerator
     {
-        [Serializable]
-        public class Config
+        // ¤¡
+        public static MeshDraft Giyuk(float radius, int segment, float height)
         {
-            public int index;
-            public float radius = 0.07f;
-            public int segment = 10;
-            public float height = 0.7f;
-            public float horizontal = 1.0f;
-            public float vertical = 1.0f;
-            public Color color = Color.white;
-        }
-
-        private delegate MeshDraft StretchersConstructor(Vector3[] legCenters, float legWidth, float legHeight);
-
-
-        //sm
-        public static MeshDraft Mesh(Config config, Renderer renderer, string shaderParameter)
-        {
-            //sm ¸Å°³º¯¼ö¸¸
-            Assert.IsTrue(config.radius > 0);
-            Assert.IsTrue(config.height > 0);
-            Assert.IsTrue(config.segment > 0);
-
-            Vector3 zero = Vector3.zero;
-            Vector3 rightBottom = Vector3.right * config.height;
-            Vector3 rightTop = Vector3.up * config.height;
-
-            List<MeshDraft> meshDrafts = new List<MeshDraft>();
-            List<MeshDraft> meshes = meshDrafts;
-
             var giyuk = new MeshDraft { name = "Giyuk" };
-            var nieun = new MeshDraft { name = "Nieun" };
-            var digeuk = new MeshDraft { name = "digeuk" };
-            var rieul = new MeshDraft { name = "rieul" };
-            var mieum = new MeshDraft { name = "mieum" };
-            var bieub = new MeshDraft { name = "bieub" };
-            var siot = new MeshDraft { name = "siot" };
-            var ieung = new MeshDraft { name = "ieung" };
-            var jiet = new MeshDraft { name = "jiet" };
-            var chiet = new MeshDraft { name = "chiet" };
-            var kieuk = new MeshDraft { name = "kieuk" };
-            var tigeuk = new MeshDraft { name = "tigeuk" };
-            var pieup = new MeshDraft { name = "pieup" };
-            var hieu = new MeshDraft { name = "hieu" };
 
-            meshes.Add(giyuk);
-            meshes.Add(nieun);
-            meshes.Add(digeuk);
-            meshes.Add(rieul);
-            meshes.Add(mieum);
-            meshes.Add(bieub);
-            meshes.Add(siot);
-            meshes.Add(ieung);
-            meshes.Add(jiet);
-            meshes.Add(chiet);
-            meshes.Add(kieuk);
-            meshes.Add(tigeuk);
-            meshes.Add(pieup);
-            meshes.Add(hieu);
+            giyuk.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            giyuk.Add(Vertical(Vector3.right * height, radius, segment, height));
 
-
-            #region ï¿½ï¿½ï¿½ï¿½
-            // ï¿½ï¿½
-            giyuk.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            giyuk.Add(Vertical(rightBottom, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-
-            // ï¿½ï¿½
-            nieun.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            nieun.Add(Vertical(zero, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-
-            // ï¿½ï¿½
-            digeuk.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            digeuk.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            digeuk.Add(Vertical(zero, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-
-            // ï¿½ï¿½
-            rieul.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            rieul.Add(Vertical(rightTop / 2 + rightBottom, config.radius, config.segment, config.height / 2, config.vertical, config.horizontal));
-            rieul.Add(Horizontal(rightTop / 2, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            rieul.Add(Vertical(zero, config.radius, config.segment, config.height / 2, config.vertical, config.horizontal));
-            rieul.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-
-            // ï¿½ï¿½
-            mieum.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            mieum.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            mieum.Add(Vertical(zero, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            mieum.Add(Vertical(rightBottom, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-
-            // ï¿½ï¿½
-            bieub.Add(Vertical(zero, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            bieub.Add(Vertical(rightBottom, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            bieub.Add(Horizontal(rightTop / 2, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            bieub.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-
-            // ï¿½ï¿½
-            siot.Add(Diagonal(rightTop / 2, config.radius, config.segment, Mathf.Sqrt(Mathf.Pow(config.height, 2)), -30.0f));
-            siot.Add(Diagonal(rightTop / 2 + rightBottom / 2, config.radius, config.segment, Mathf.Sqrt(Mathf.Pow(config.height, 2)), -150.0f));
-
-            // ï¿½ï¿½
-            // ieung
-
-            // ï¿½ï¿½
-            float diagonal = Mathf.Sqrt(Mathf.Pow(config.height, 2));
-            jiet.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            jiet.Add(Diagonal(new Vector3(-config.height * 0.1f, config.height / 2, 0), config.radius, config.segment, config.height + config.height * 0.1f, -45.0f));
-            jiet.Add(Diagonal(new Vector3(diagonal * 0.4f, diagonal * 0.3f, 0), config.radius, config.segment, diagonal * 0.6f, 45.0f));
-
-            // ï¿½ï¿½
-            chiet.Add(Vertical(rightTop + rightBottom / 2, config.radius, config.segment, config.height * 0.3f, config.vertical, config.horizontal));
-            chiet.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            chiet.Add(Diagonal(new Vector3(-config.height * 0.1f, config.height / 2, 0), config.radius, config.segment, config.height + config.height * 0.1f, -45.0f));
-            // chiet.Add(Diagonal(rightTop * 0.6f + rightBottom * 0.3f, config.radius, config.segment, config.height, -45.0f));
-            chiet.Add(Diagonal(new Vector3(diagonal * 0.4f, diagonal * 0.3f, 0), config.radius, config.segment, diagonal * 0.6f, 45.0f));
-
-
-            // ï¿½ï¿½
-            kieuk.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            kieuk.Add(Horizontal(rightTop / 2, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            kieuk.Add(Vertical(rightBottom, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-
-            // ï¿½ï¿½
-            tigeuk.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            tigeuk.Add(Horizontal(rightTop / 2, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            tigeuk.Add(Vertical(zero, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            tigeuk.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-
-            // ï¿½ï¿½
-            pieup.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-            pieup.Add(Vertical(rightBottom * 0.25f, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            pieup.Add(Vertical(rightBottom * 0.75f, config.radius, config.segment, config.height, config.vertical, config.horizontal));
-            pieup.Add(Horizontal(zero, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-
-            // ï¿½ï¿½
-            hieu.Add(Vertical(rightTop + rightBottom / 2, config.radius, config.segment, config.height * 0.3f, config.vertical, config.horizontal));
-            hieu.Add(Horizontal(rightTop, config.radius, config.segment, config.height, config.horizontal, config.vertical));
-
-            #endregion
-
-            meshes[config.index].Paint(config.color);
-
-            //sm
-            float newSlideVal = CalculateSlideVal(config.height);
-            renderer.material.SetFloat(shaderParameter, newSlideVal);
-            //sm
-
-            return meshes[config.index];
+            //meshes[config.index].Paint(config.color);
+            return giyuk;
         }
+
+        //¤¢
+        public static MeshDraft DoubleGiyuk(float radius, int segment, float height)
+        {
+            var doubleGiyuk = new MeshDraft { name = "DoubleGiyuk" };
+
+            doubleGiyuk.Add(Horizontal(Vector3.up * height, radius, segment, height*0.5f));
+            doubleGiyuk.Add(Vertical(Vector3.right * height*0.5f, radius, segment, height));
+            doubleGiyuk.Add(Horizontal(Vector3.up * height + Vector3.right, radius, segment, height*0.5f));
+            doubleGiyuk.Add(Vertical(Vector3.right * height, radius, segment, height));
+
+            //meshes[config.index].Paint(config.color);
+            return doubleGiyuk;
+        }
+
+        // ¤¤
+        public static MeshDraft Nieun(float radius, int segment, float height)
+        {
+            var nieun = new MeshDraft { name = "Nieun" };
+
+            nieun.Add(Horizontal(Vector3.zero, radius, segment, height));
+            nieun.Add(Vertical(Vector3.zero, radius, segment, height));
+
+            return nieun;
+        }
+
+        // ¤§
+        public static MeshDraft Digeuk(float radius, int segment, float height)
+        {
+            var digeuk = new MeshDraft { name = "Digeuk" };
+     
+            digeuk.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            digeuk.Add(Horizontal(Vector3.zero, radius, segment, height));
+            digeuk.Add(Vertical(Vector3.zero, radius, segment, height));
+
+            return digeuk;
+        }
+
+        //¤¨
+        public static MeshDraft DoubleDigeuk(float radius, int segment, float height)
+        {
+            var doubleDigeuk = new MeshDraft { name = "DoubleDigeuk" };
+
+            doubleDigeuk.Add(Horizontal(Vector3.up * height, radius, segment, height*0.5f));
+            doubleDigeuk.Add(Horizontal(Vector3.zero, radius, segment, height*0.5f));
+            doubleDigeuk.Add(Vertical(Vector3.zero, radius, segment, height));
+
+            doubleDigeuk.Add(Horizontal(Vector3.up * height + Vector3.right, radius, segment, height * 0.5f));
+            doubleDigeuk.Add(Horizontal(new Vector3(height * 0.5f, 0, 0), radius, segment, height * 0.5f));
+            doubleDigeuk.Add(Vertical(new Vector3(height*0.5f,0,0), radius, segment, height));
+
+            return doubleDigeuk;
+        }
+
+        // ¤©
+        public static MeshDraft Rieul(float radius, int segment, float height)
+        {
+            var rieul = new MeshDraft { name = "Rieul" };
+
+            rieul.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            rieul.Add(Vertical(Vector3.up * height / 2 + Vector3.right * height, radius, segment, height / 2));
+            rieul.Add(Horizontal(Vector3.up * height / 2, radius, segment, height));
+            rieul.Add(Vertical(Vector3.zero, radius, segment, height / 2));
+            rieul.Add(Horizontal(Vector3.zero, radius, segment, height));
+
+            return rieul;
+        }
+
+        // ¤±
+        public static MeshDraft Mieum(float radius, int segment, float height)
+        {
+            var mieum = new MeshDraft { name = "Mieum" };
+
+            Vector3 rightBottom = Vector3.right * height;
+            Vector3 rightTop = Vector3.up * height;
+
+            mieum.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            mieum.Add(Horizontal(Vector3.zero, radius, segment, height));
+            mieum.Add(Vertical(Vector3.zero, radius, segment, height));
+            mieum.Add(Vertical(Vector3.right * height, radius, segment, height));
+
+            return mieum;
+        }
+
+        // ¤²
+        public static MeshDraft Bieub(float radius, int segment, float height)
+        {
+            var bieub = new MeshDraft { name = "Bieub" };
+
+            bieub.Add(Vertical(Vector3.zero, radius, segment, height));
+            bieub.Add(Vertical(Vector3.right * height, radius, segment, height));
+            bieub.Add(Horizontal(Vector3.up * height / 2, radius, segment, height));
+            bieub.Add(Horizontal(Vector3.zero, radius, segment, height));
+            
+            return bieub;
+        }
+
+        public static MeshDraft DoubleBieub(float radius, int segment, float height)
+        {
+            var doubleBieub = new MeshDraft { name = "DoubleBieub" };
+
+            doubleBieub.Add(Vertical(Vector3.zero, radius, segment, height));
+            doubleBieub.Add(Vertical(Vector3.right * height*0.5f, radius, segment, height));
+            doubleBieub.Add(Horizontal(Vector3.up * height*0.5f, radius, segment, height * 0.5f));
+            doubleBieub.Add(Horizontal(Vector3.zero, radius, segment, height * 0.5f));
+
+            doubleBieub.Add(Vertical(new Vector3(height * 0.5f, 0, 0), radius, segment, height));
+            doubleBieub.Add(Vertical(Vector3.right * height, radius, segment, height));
+            doubleBieub.Add(Horizontal(Vector3.up * height / 2+ new Vector3(height * 0.5f, 0, 0), radius, segment, height*0.5f));
+            doubleBieub.Add(Horizontal(new Vector3(height * 0.5f, 0, 0), radius, segment, height*0.5f));
+
+            return doubleBieub;
+        }
+
+        // ¤µ
+        public static MeshDraft Siot(float radius, int segment, float height)
+        {
+            var siot = new MeshDraft { name = "Siot" };
+            float length = Mathf.Sqrt(Mathf.Pow(height, 2) + Mathf.Pow(height * 0.5f, 2));
+
+            siot.Add(Diagonal(new Vector3(height * 0.25f,height * 0.5f,0), radius, segment, length, -30.0f));
+            siot.Add(Diagonal(new Vector3(height * 0.75f, height * 0.5f,0), radius, segment, length, -150.0f));
+
+            return siot;
+        }
+
+        // ¤¶
+        public static MeshDraft DoubleSiot(float radius, int segment, float height)
+        {
+            var doubleSiot = new MeshDraft { name = "DoubleSiot" };
+
+            float length = Mathf.Sqrt(Mathf.Pow(height, 2) + Mathf.Pow(height * 0.5f, 2));
+
+            doubleSiot.Add(Diagonal(new Vector3(height * 0.1295f, height * 0.483f, 0), radius, segment, length, -15.0f));
+            doubleSiot.Add(Diagonal(new Vector3(height * 0.3795f, height * 0.483f, 0), radius, segment, length, -165.0f));
+
+            doubleSiot.Add(Diagonal(new Vector3(height * 0.5295f, height * 0.483f, 0), radius, segment, length, -15.0f));
+            doubleSiot.Add(Diagonal(new Vector3(height * 0.7795f, height * 0.483f, 0), radius, segment, length, -165.0f));
+
+            return doubleSiot;
+        }
+
+        // ¤·
+        public static MeshDraft Ieung(float radius, int segment, float height)
+        {
+            var ieung = new MeshDraft { name = "Ieung" };
+
+            // µµ³Ó ½ºÅ©¸³Æ®·Î ´ëÃ¼.
+            return ieung;
+        }
+
+        // ¤¸
+        public static MeshDraft Jiet(float radius, int segment, float height)
+        {
+            var jiet = new MeshDraft { name = "Jiet" };
+
+            float length = Mathf.Sqrt(Mathf.Pow(height, 2) + Mathf.Pow(height * 0.5f, 2));
+
+            jiet.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            jiet.Add(Diagonal(new Vector3(height * 0.25f, height * 0.5f, 0), radius, segment, length, -30.0f));
+            jiet.Add(Diagonal(new Vector3(height * 0.75f, height * 0.5f, 0), radius, segment, length, -150.0f));
+            //float diagonal = Mathf.Sqrt(Mathf.Pow(height, 2));
+            //jiet.Add(Diagonal(new Vector3(-height * 0.1f, height / 2, 0) + Vector3.right * height / 2,
+            //                           radius, segment, height + height * 0.1f, -45.0f));
+            //jiet.Add(Diagonal(new Vector3(diagonal * 0.4f, diagonal * 0.3f, 0) + Vector3.right * height / 2,
+            //                            radius, segment, diagonal * 0.6f, 45.0f));
+
+            return jiet;
+        }
+
+        public static MeshDraft DoubleJiet(float radius, int segment, float height)
+        {
+            var doublejiet = new MeshDraft { name = "DoubleJiet" };
+
+            float length = Mathf.Sqrt(Mathf.Pow(height, 2) + Mathf.Pow(height * 0.5f, 2));
+
+            doublejiet.Add(Diagonal(new Vector3(height * 0.25f * 0.5f, height * 0.5f, 0), radius, segment, length, -15.0f));
+            doublejiet.Add(Diagonal(new Vector3(height * 0.75f * 0.5f, height * 0.5f, 0), radius, segment, length, -165.0f));
+
+            doublejiet.Add(Diagonal(new Vector3(height * 0.25f + height * 0.5f, height * 0.5f, 0), radius, segment, length, -15.0f));
+            doublejiet.Add(Diagonal(new Vector3(height * 0.75f + height * 0.25f, height * 0.5f, 0), radius, segment, length, -165.0f));
+
+            return doublejiet;
+        }
+
+        // ¤º
+        public static MeshDraft Chiet(float radius, int segment, float height)
+        {
+            var chiet = new MeshDraft { name = "Chiet" };
+
+            float length = Mathf.Sqrt(Mathf.Pow(height, 2) + Mathf.Pow(height * 0.5f, 2));
+
+            chiet.Add(Vertical(Vector3.up * height + Vector3.right * height / 2, radius, segment, height * 0.3f));
+            chiet.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            chiet.Add(Diagonal(new Vector3(height * 0.25f, height * 0.5f, 0), radius, segment, length, -30.0f));
+            chiet.Add(Diagonal(new Vector3(height * 0.75f, height * 0.5f, 0), radius, segment, length, -150.0f));
+            //float diagonal = Mathf.Sqrt(Mathf.Pow(height, 2));
+            //chiet.Add(Diagonal(new Vector3(-height * 0.1f, height / 2, 0)+ Vector3.right * height / 2,
+            //                            radius, segment, height + height * 0.1f, -45.0f));
+            //chiet.Add(Diagonal(new Vector3(diagonal * 0.4f, diagonal * 0.3f, 0)+ Vector3.right * height / 2,
+            //                            radius, segment, diagonal * 0.6f, 45.0f));
+
+            return chiet;
+        }
+
+        // ¤»
+        public static MeshDraft Kieuk(float radius, int segment, float height)
+        {
+            var kieuk = new MeshDraft { name = "Kieuk" };
+
+            kieuk.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            kieuk.Add(Horizontal(Vector3.up * height / 2, radius, segment, height));
+            kieuk.Add(Vertical(Vector3.right * height, radius, segment, height));
+
+            return kieuk;
+        }
+
+        // ¤¼
+        public static MeshDraft Tigeuk(float radius, int segment, float height)
+        {
+            var tigeuk = new MeshDraft { name = "Tigeuk" };
+
+            tigeuk.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            tigeuk.Add(Horizontal(Vector3.up * height / 2, radius, segment, height));
+            tigeuk.Add(Vertical(Vector3.zero, radius, segment, height));
+            tigeuk.Add(Horizontal(Vector3.zero, radius, segment, height));
+
+            return tigeuk;
+        }
+
+        // ¤½
+        public static MeshDraft Pieup(float radius, int segment, float height)
+        {
+            var pieup = new MeshDraft { name = "Pieup" };
+
+            pieup.Add(Horizontal(Vector3.up * height, radius, segment, height));
+            pieup.Add(Vertical(Vector3.right * height * 0.25f, radius, segment, height));
+            pieup.Add(Vertical(Vector3.right * height * 0.75f, radius, segment, height));
+            pieup.Add(Horizontal(Vector3.zero, radius, segment, height));
+
+            return pieup;
+        }
+
+        // ¤¾
+        public static MeshDraft Hieu(float radius, int segment, float height)
+        {
+            var hieu = new MeshDraft { name = "Hieu" };
+
+            hieu.Add(Vertical(Vector3.up * height + Vector3.right * height / 2, radius, segment, height * 0.3f));
+            hieu.Add(Horizontal(Vector3.up * height, radius, segment, height));
+
+            return hieu;
+        }
+
+        
 
         // °¡·Î
-        private static MeshDraft Horizontal(Vector3 center, float radius, int segment, float height, float horizontal, float vertical)
+        private static MeshDraft Horizontal(Vector3 center, float radius, int segment, float height)
         {
-            var draft = MeshDraft.Cylinder(radius, segment, height * horizontal, true);
+            var draft = MeshDraft.Cylinder(radius, segment, height, true);
 
             Vector3 zeroVerti = Vector3.right * height / 2;
             draft.Rotate(Quaternion.Euler(0, 0, 90));
@@ -170,9 +289,9 @@ namespace ProceduralToolkit.Samples
         }
 
         // ¼¼·Î
-        private static MeshDraft Vertical(Vector3 center, float radius, int segment, float height, float vertical, float horizontal)
+        private static MeshDraft Vertical(Vector3 center, float radius, int segment, float height)
         {
-            var draft = MeshDraft.Cylinder(radius, segment, height * vertical, true);
+            var draft = MeshDraft.Cylinder(radius, segment, height, true);
 
             Vector3 zeroHorizon = Vector3.up * height / 2;
             draft.Move(zeroHorizon);
@@ -187,9 +306,9 @@ namespace ProceduralToolkit.Samples
         {
             var draft = MeshDraft.Cylinder(radius, segment, height, true);
 
-            Vector3 zeroVerti = Vector3.right * height / 2;
+            //Vector3 zeroVerti = Vector3.right * height / 2;
             draft.Rotate(Quaternion.Euler(0, 0, angle));
-            draft.Move(zeroVerti);
+            //draft.Move(zeroVerti);
 
             draft.Move(center);
 
@@ -202,6 +321,10 @@ namespace ProceduralToolkit.Samples
             float maxHight = 1.2f;
             return height / maxHight;
         }
-        //sm
+        private static void MaterialSetting(float height, Renderer renderer, string shaderParameter)
+        {
+            float newSlideVal = CalculateSlideVal(height);
+            renderer.material.SetFloat(shaderParameter, newSlideVal);
+        }
     }
 }

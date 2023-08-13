@@ -14,8 +14,6 @@ namespace ProceduralToolkit.Samples
         public MeshFilter mesh02_filter;//moum
         public RectTransform leftPanel;
         public bool constantSeed = false;
-        public MeshGenerator.Config config = new MeshGenerator.Config();
-        public MeshGenerator_02.Config config02 = new MeshGenerator_02.Config();
 
         //sm
         public Renderer jaumRenderer; // jaum renderer
@@ -49,77 +47,22 @@ namespace ProceduralToolkit.Samples
         {
             Generate();
 
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Mesh", minIndex, maxIndex, config.index, value =>
-                {
-                    config.index = value;
-                    Generate();
-                });
-
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Mesh_02", minIndex02, maxIndex02, config02.index, value =>
-                {
-                    config02.index = value;
-                    Generate();
-                });
-
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Radius", minRadius, maxRadius, config.radius, value =>
-                {
-                    config.radius = value;
-                    config02.radius = value;
-                    Generate();
-                });
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Segment", minSegment, maxSegment, config.segment, value =>
-                {
-                    config.segment = value;
-                    config02.segment = value;
-                    Generate();
-                });
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Height", minHeight, maxHeight, config.height, value =>
-                {
-                    //sm
-                    // When the legDepth changes, update the shader parameter
-                    float newSlideVal = CalculateSlideVal(config.height);
-                    jaumRenderer.material.SetFloat(shaderParameter, newSlideVal);
-                    moumRenderer.material.SetFloat(shaderParameter, newSlideVal);
-                    //sm
-                    config.height = value;
-                    config02.height = value;
-                    Generate();
-                });
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Horizontal", minHorizontal, maxHorizontal, config.horizontal, value =>
-                {
-                    config.horizontal = value;
-                    config02.horizontal = value;
-                    Generate();
-                });
-            InstantiateControl<SliderControl>(leftPanel)
-                .Initialize("Vertical", minVertical, maxVertical, config.vertical, value =>
-                {
-                    config.vertical = value;
-                    config02.vertical = value;
-                    Generate();
-                });
-
+           
             InstantiateControl<ButtonControl>(leftPanel).Initialize("Generate", () => Generate());
             //sm
-            oldDepth = config.height; // Initialize with the current depth
+            //oldDepth = height; // Initialize with the current depth
         }
 
         public void Generate(bool randomizeConfig = true)
         {
             //sm
-            if (config.height != oldDepth)
-            {
-                float newSlideVal = CalculateSlideVal(config.height);
-                jaumRenderer.material.SetFloat(shaderParameter, newSlideVal);
-                moumRenderer.material.SetFloat(shaderParameter, newSlideVal);
-                oldDepth = config.height;
-            }
+            //if (config.height != oldDepth)
+            //{
+            //    float newSlideVal = CalculateSlideVal(config.height);
+            //    jaumRenderer.material.SetFloat(shaderParameter, newSlideVal);
+            //    moumRenderer.material.SetFloat(shaderParameter, newSlideVal);
+            //    oldDepth = config.height;
+            //}
             //sm
 
             if (constantSeed)
@@ -135,12 +78,12 @@ namespace ProceduralToolkit.Samples
             }
 
             //sm : 매개변수만
-            var meshGenerator = MeshGenerator.Mesh(config, jaumRenderer, shaderParameter);
-            AssignDraftToMeshFilter(meshGenerator, mesh_filter, ref mesh);
+            //var meshGenerator = MeshGenerator.Mesh(config, jaumRenderer, shaderParameter);
+            //AssignDraftToMeshFilter(meshGenerator, mesh_filter, ref mesh);
 
             //sm :  매개변수만
-            var meshGenerator02 = MeshGenerator_02.Mesh(config02, moumRenderer, shaderParameter);
-            AssignDraftToMeshFilter(meshGenerator02, mesh02_filter, ref mesh02);
+            //var meshGenerator02 = MeshGenerator_02.Mesh(config02, moumRenderer, shaderParameter);
+            //AssignDraftToMeshFilter(meshGenerator02, mesh02_filter, ref mesh02);
 
         }
 
@@ -149,6 +92,5 @@ namespace ProceduralToolkit.Samples
         {
             return depth / maxHeight;
         }
-        //sm
     }
 }
