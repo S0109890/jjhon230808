@@ -6,326 +6,356 @@ using System.Text;
 
 namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
 {
-public static class HangulDecomposer
-{
-    private const int HangulBase = 0xAC00;
-    private const int ChosungBase = 0x1100;
-    private const int JungsungBase = 0x1161;
-    private const int JongsungBase = 0x11A7;
-
-    private const int ChosungCount = 19;
-    private const int JungsungCount = 21;
-    private const int JongsungCount = 28;
-
-    private const int JongsungDivide = JungsungCount * JongsungCount;
-
-    public static string DecomposeHangul(string text)
+    public static class HangulDecomposer
     {
-        StringBuilder decomposedText = new StringBuilder();
+        private const int HangulBase = 0xAC00;
+        private const int ChosungBase = 0x1100; // 초성 시작 위치
+        private const int JungsungBase = 0x1161; // 중성 시작 위치
+        private const int JongsungBase = 0x11A7; // 종성 시작 위치 (종성이 없는 경우를 포함하므로 실제 종성의 시작은 0x11A8)
 
-        foreach (char ch in text)
+
+        private const int ChosungCount = 19;
+        private const int JungsungCount = 21;
+        private const int JongsungCount = 28;
+
+        private const int JongsungDivide = JungsungCount * JongsungCount;
+
+        public static string DecomposeHangul(string text)
         {
-            int codePoint = ch - HangulBase;
+            StringBuilder decomposedText = new StringBuilder();
 
-            if (codePoint < 0 || codePoint >= ChosungCount * JongsungDivide)
+            foreach (char ch in text)
             {
-                decomposedText.Append(ch);
-                continue;
+                int codePoint = ch - HangulBase;
+
+                if (codePoint < 0 || codePoint >= ChosungCount * JongsungDivide)
+                {
+                    decomposedText.Append(ch);
+                    continue;
+                }
+
+                int chosungIndex = codePoint / JongsungDivide;
+                int jungsungIndex = (codePoint - (chosungIndex * JongsungDivide)) / JongsungCount;
+                int jongsungIndex = codePoint % JongsungCount;
+
+                decomposedText.Append((char)(ChosungBase + chosungIndex)); // 초성 추가
+                DecomposeJungsung(jungsungIndex, decomposedText); // 중성 분해 후 추가
+                                                                  //before make DecomposeJungsung
+                                                                  //decomposedText.Append((char)(JungsungBase + jungsungIndex));
+
+                if (jongsungIndex != 0) // 종성이 있으면 추가
+                {
+                    decomposedText.Append((char)(JongsungBase + jongsungIndex));
+                }
             }
 
-            int chosungIndex = codePoint / JongsungDivide;
-            int jungsungIndex = (codePoint - (chosungIndex * JongsungDivide)) / JongsungCount;
-            int jongsungIndex = codePoint % JongsungCount;
+            return decomposedText.ToString();
+        }
 
-            decomposedText.Append((char)(ChosungBase + chosungIndex));
-            decomposedText.Append((char)(JungsungBase + jungsungIndex));
-
-            if (jongsungIndex != 0)
+        //DecomposeJungsung 230813 added
+        private static void DecomposeJungsung(int index, StringBuilder sb)
+        {
+            char[][] jungsungDecomposition =
             {
-                decomposedText.Append((char)(JongsungBase + jongsungIndex));
+            new[] {'ㅏ'}, new[] {'ㅐ'}, new[] {'ㅑ'}, new[] {'ㅒ'}, new[] {'ㅓ'}, new[] {'ㅔ'},
+            new[] {'ㅕ'}, new[] {'ㅖ'}, new[] {'ㅗ'},
+         new[] {'ㅗ', 'ㅏ'}, //ㅘ
+         new[] {'ㅗ', 'ㅐ'}, //ㅙ
+         new[] {'ㅗ', 'ㅣ'}, //ㅚ
+            new[] {'ㅛ'}, new[] {'ㅜ'},
+         new[] {'ㅜ', 'ㅓ'}, //ㅝ
+         new[] {'ㅜ', 'ㅔ'}, //ㅞ
+         new[] {'ㅜ', 'ㅣ'}, //ㅟ
+         new[] {'ㅠ'}, new[] {'ㅡ'},
+         new[] {'ㅡ', 'ㅣ'}, //ㅢ
+         new[] {'ㅣ'}
+        };
+
+            foreach (char jungsung in jungsungDecomposition[index])
+            {
+                sb.Append(jungsung);
             }
         }
 
-        return decomposedText.ToString();
+
     }
-}
 
 
-	
-	public class GCSR_Example : MonoBehaviour
-	{
-		private GCSpeechRecognition _speechRecognition;
 
-		private Button _startRecordButton,
-					   _stopRecordButton,
-					   _getOperationButton,
-					   _getListOperationsButton,
-					   _detectThresholdButton,
-					   _cancelAllRequestsButton,
-					   _recognizeButton,
-					   _refreshMicrophonesButton;
+    public class GCSR_Example : MonoBehaviour
+    {
+        private GCSpeechRecognition _speechRecognition;
 
-		private Image _speechRecognitionState;
+        private Button _startRecordButton,
+                    _stopRecordButton,
+                    _getOperationButton,
+                    _getListOperationsButton,
+                    _detectThresholdButton,
+                    _cancelAllRequestsButton,
+                    _recognizeButton,
+                    _refreshMicrophonesButton;
 
-		private Text _resultText;
+        private Image _speechRecognitionState;
 
-		private Toggle _voiceDetectionToggle,
-					   _recognizeDirectlyToggle,
-					   _longRunningRecognizeToggle;
+        private Text _resultText;
 
-		private Dropdown _languageDropdown,
-						 _microphoneDevicesDropdown;
+        private Toggle _voiceDetectionToggle,
+                    _recognizeDirectlyToggle,
+                    _longRunningRecognizeToggle;
 
-		private InputField _contextPhrasesInputField,
-						   _operationIdInputField;
+        private Dropdown _languageDropdown,
+                     _microphoneDevicesDropdown;
 
-		private Image _voiceLevelImage;
+        private InputField _contextPhrasesInputField,
+                       _operationIdInputField;
 
-		private void Start()
-		{
-			_speechRecognition = GCSpeechRecognition.Instance;
-			_speechRecognition.RecognizeSuccessEvent += RecognizeSuccessEventHandler;
-			_speechRecognition.RecognizeFailedEvent += RecognizeFailedEventHandler;
-			_speechRecognition.LongRunningRecognizeSuccessEvent += LongRunningRecognizeSuccessEventHandler;
-			_speechRecognition.LongRunningRecognizeFailedEvent += LongRunningRecognizeFailedEventHandler;
-			_speechRecognition.GetOperationSuccessEvent += GetOperationSuccessEventHandler;
-			_speechRecognition.GetOperationFailedEvent += GetOperationFailedEventHandler;
-			_speechRecognition.ListOperationsSuccessEvent += ListOperationsSuccessEventHandler;
-			_speechRecognition.ListOperationsFailedEvent += ListOperationsFailedEventHandler;
+        private Image _voiceLevelImage;
 
-			_speechRecognition.FinishedRecordEvent += FinishedRecordEventHandler;
-			_speechRecognition.StartedRecordEvent += StartedRecordEventHandler;
-			_speechRecognition.RecordFailedEvent += RecordFailedEventHandler;
+        private void Start()
+        {
+            _speechRecognition = GCSpeechRecognition.Instance;
+            _speechRecognition.RecognizeSuccessEvent += RecognizeSuccessEventHandler;
+            _speechRecognition.RecognizeFailedEvent += RecognizeFailedEventHandler;
+            _speechRecognition.LongRunningRecognizeSuccessEvent += LongRunningRecognizeSuccessEventHandler;
+            _speechRecognition.LongRunningRecognizeFailedEvent += LongRunningRecognizeFailedEventHandler;
+            _speechRecognition.GetOperationSuccessEvent += GetOperationSuccessEventHandler;
+            _speechRecognition.GetOperationFailedEvent += GetOperationFailedEventHandler;
+            _speechRecognition.ListOperationsSuccessEvent += ListOperationsSuccessEventHandler;
+            _speechRecognition.ListOperationsFailedEvent += ListOperationsFailedEventHandler;
 
-			_speechRecognition.BeginTalkigEvent += BeginTalkigEventHandler;
-			_speechRecognition.EndTalkigEvent += EndTalkigEventHandler;
+            _speechRecognition.FinishedRecordEvent += FinishedRecordEventHandler;
+            _speechRecognition.StartedRecordEvent += StartedRecordEventHandler;
+            _speechRecognition.RecordFailedEvent += RecordFailedEventHandler;
 
-			_startRecordButton = transform.Find("Canvas/Button_StartRecord").GetComponent<Button>();
-			_stopRecordButton = transform.Find("Canvas/Button_StopRecord").GetComponent<Button>();
-			_getOperationButton = transform.Find("Canvas/Button_GetOperation").GetComponent<Button>();
-			_getListOperationsButton = transform.Find("Canvas/Button_GetListOperations").GetComponent<Button>();
-			_detectThresholdButton = transform.Find("Canvas/Button_DetectThreshold").GetComponent<Button>();
-			_cancelAllRequestsButton = transform.Find("Canvas/Button_CancelAllRequests").GetComponent<Button>();
-			_recognizeButton = transform.Find("Canvas/Button_Recognize").GetComponent<Button>();
-			_refreshMicrophonesButton = transform.Find("Canvas/Button_RefreshMics").GetComponent<Button>();
+            _speechRecognition.BeginTalkigEvent += BeginTalkigEventHandler;
+            _speechRecognition.EndTalkigEvent += EndTalkigEventHandler;
 
-			_speechRecognitionState = transform.Find("Canvas/Image_RecordState").GetComponent<Image>();
+            _startRecordButton = transform.Find("Canvas/Button_StartRecord").GetComponent<Button>();
+            _stopRecordButton = transform.Find("Canvas/Button_StopRecord").GetComponent<Button>();
+            _getOperationButton = transform.Find("Canvas/Button_GetOperation").GetComponent<Button>();
+            _getListOperationsButton = transform.Find("Canvas/Button_GetListOperations").GetComponent<Button>();
+            _detectThresholdButton = transform.Find("Canvas/Button_DetectThreshold").GetComponent<Button>();
+            _cancelAllRequestsButton = transform.Find("Canvas/Button_CancelAllRequests").GetComponent<Button>();
+            _recognizeButton = transform.Find("Canvas/Button_Recognize").GetComponent<Button>();
+            _refreshMicrophonesButton = transform.Find("Canvas/Button_RefreshMics").GetComponent<Button>();
 
-			_resultText = transform.Find("Canvas/Panel_ContentResult/Text_Result").GetComponent<Text>();
+            _speechRecognitionState = transform.Find("Canvas/Image_RecordState").GetComponent<Image>();
 
-			_voiceDetectionToggle = transform.Find("Canvas/Toggle_DetectVoice").GetComponent<Toggle>();
-			_recognizeDirectlyToggle = transform.Find("Canvas/Toggle_RecognizeDirectly").GetComponent<Toggle>();
-			_longRunningRecognizeToggle = transform.Find("Canvas/Toggle_LongRunningRecognize").GetComponent<Toggle>();
+            _resultText = transform.Find("Canvas/Panel_ContentResult/Text_Result").GetComponent<Text>();
 
-			_languageDropdown = transform.Find("Canvas/Dropdown_Language").GetComponent<Dropdown>();
-			_microphoneDevicesDropdown = transform.Find("Canvas/Dropdown_MicrophoneDevices").GetComponent<Dropdown>();		
+            _voiceDetectionToggle = transform.Find("Canvas/Toggle_DetectVoice").GetComponent<Toggle>();
+            _recognizeDirectlyToggle = transform.Find("Canvas/Toggle_RecognizeDirectly").GetComponent<Toggle>();
+            _longRunningRecognizeToggle = transform.Find("Canvas/Toggle_LongRunningRecognize").GetComponent<Toggle>();
 
-			_contextPhrasesInputField = transform.Find("Canvas/InputField_SpeechContext").GetComponent<InputField>();
-			_operationIdInputField = transform.Find("Canvas/InputField_Operation").GetComponent<InputField>();
+            _languageDropdown = transform.Find("Canvas/Dropdown_Language").GetComponent<Dropdown>();
+            _microphoneDevicesDropdown = transform.Find("Canvas/Dropdown_MicrophoneDevices").GetComponent<Dropdown>();
 
-			_voiceLevelImage = transform.Find("Canvas/Panel_VoiceLevel/Image_Level").GetComponent<Image>();
+            _contextPhrasesInputField = transform.Find("Canvas/InputField_SpeechContext").GetComponent<InputField>();
+            _operationIdInputField = transform.Find("Canvas/InputField_Operation").GetComponent<InputField>();
 
-			_startRecordButton.onClick.AddListener(StartRecordButtonOnClickHandler);
-			_stopRecordButton.onClick.AddListener(StopRecordButtonOnClickHandler);
-			_getOperationButton.onClick.AddListener(GetOperationButtonOnClickHandler);
-			_getListOperationsButton.onClick.AddListener(GetListOperationsButtonOnClickHandler);
-			_detectThresholdButton.onClick.AddListener(DetectThresholdButtonOnClickHandler);
-			_cancelAllRequestsButton.onClick.AddListener(CancelAllRequetsButtonOnClickHandler);
-			_recognizeButton.onClick.AddListener(RecognizeButtonOnClickHandler);
-			_refreshMicrophonesButton.onClick.AddListener(RefreshMicsButtonOnClickHandler);
+            _voiceLevelImage = transform.Find("Canvas/Panel_VoiceLevel/Image_Level").GetComponent<Image>();
 
-			_microphoneDevicesDropdown.onValueChanged.AddListener(MicrophoneDevicesDropdownOnValueChangedEventHandler);
+            _startRecordButton.onClick.AddListener(StartRecordButtonOnClickHandler);
+            _stopRecordButton.onClick.AddListener(StopRecordButtonOnClickHandler);
+            _getOperationButton.onClick.AddListener(GetOperationButtonOnClickHandler);
+            _getListOperationsButton.onClick.AddListener(GetListOperationsButtonOnClickHandler);
+            _detectThresholdButton.onClick.AddListener(DetectThresholdButtonOnClickHandler);
+            _cancelAllRequestsButton.onClick.AddListener(CancelAllRequetsButtonOnClickHandler);
+            _recognizeButton.onClick.AddListener(RecognizeButtonOnClickHandler);
+            _refreshMicrophonesButton.onClick.AddListener(RefreshMicsButtonOnClickHandler);
 
-			_startRecordButton.interactable = true;
-			_stopRecordButton.interactable = false;
-			_speechRecognitionState.color = Color.yellow;
+            _microphoneDevicesDropdown.onValueChanged.AddListener(MicrophoneDevicesDropdownOnValueChangedEventHandler);
 
-			_languageDropdown.ClearOptions();
+            _startRecordButton.interactable = true;
+            _stopRecordButton.interactable = false;
+            _speechRecognitionState.color = Color.yellow;
 
-			for (int i = 0; i < Enum.GetNames(typeof(Enumerators.LanguageCode)).Length; i++)
-			{
-				_languageDropdown.options.Add(new Dropdown.OptionData(((Enumerators.LanguageCode)i).Parse()));
-			}
-			//set Korean as a defult
-			_languageDropdown.value = _languageDropdown.options.IndexOf(_languageDropdown.options.Find(x => x.text == Enumerators.LanguageCode.ko_KR.Parse()));
+            _languageDropdown.ClearOptions();
 
-			RefreshMicsButtonOnClickHandler();
-		}
+            for (int i = 0; i < Enum.GetNames(typeof(Enumerators.LanguageCode)).Length; i++)
+            {
+                _languageDropdown.options.Add(new Dropdown.OptionData(((Enumerators.LanguageCode)i).Parse()));
+            }
+            //set Korean as a defult
+            _languageDropdown.value = _languageDropdown.options.IndexOf(_languageDropdown.options.Find(x => x.text == Enumerators.LanguageCode.ko_KR.Parse()));
 
-		private void OnDestroy()
-		{
-			_speechRecognition.RecognizeSuccessEvent -= RecognizeSuccessEventHandler;
-			_speechRecognition.RecognizeFailedEvent -= RecognizeFailedEventHandler;
-			_speechRecognition.LongRunningRecognizeSuccessEvent -= LongRunningRecognizeSuccessEventHandler;
-			_speechRecognition.LongRunningRecognizeFailedEvent -= LongRunningRecognizeFailedEventHandler;
-			_speechRecognition.GetOperationSuccessEvent -= GetOperationSuccessEventHandler;
-			_speechRecognition.GetOperationFailedEvent -= GetOperationFailedEventHandler;
-			_speechRecognition.ListOperationsSuccessEvent -= ListOperationsSuccessEventHandler;
-			_speechRecognition.ListOperationsFailedEvent -= ListOperationsFailedEventHandler;
-
-			_speechRecognition.FinishedRecordEvent -= FinishedRecordEventHandler;
-			_speechRecognition.StartedRecordEvent -= StartedRecordEventHandler;
-			_speechRecognition.RecordFailedEvent -= RecordFailedEventHandler;
-
-			_speechRecognition.EndTalkigEvent -= EndTalkigEventHandler;
-		}
-
-		private void Update()
-		{
-			if(_speechRecognition.IsRecording)
-			{
-				if (_speechRecognition.GetMaxFrame() > 0)
-				{
-					float max = (float)_speechRecognition.configs[_speechRecognition.currentConfigIndex].voiceDetectionThreshold;
-					float current = _speechRecognition.GetLastFrame() / max;
-
-					if(current >= 1f)
-					{
-						_voiceLevelImage.fillAmount = Mathf.Lerp(_voiceLevelImage.fillAmount, Mathf.Clamp(current / 2f, 0, 1f), 30 * Time.deltaTime);
-					}
-					else
-					{
-						_voiceLevelImage.fillAmount = Mathf.Lerp(_voiceLevelImage.fillAmount, Mathf.Clamp(current / 2f, 0, 0.5f), 30 * Time.deltaTime);
-					}
-
-					_voiceLevelImage.color = current >= 1f ? Color.green : Color.red;
-				}
-			}
-			else
-			{
-				_voiceLevelImage.fillAmount = 0f;
-			}
-		}
-
-		private void RefreshMicsButtonOnClickHandler()
-		{
-			_speechRecognition.RequestMicrophonePermission(null);
-
-			_microphoneDevicesDropdown.ClearOptions();
-			_microphoneDevicesDropdown.AddOptions(_speechRecognition.GetMicrophoneDevices().ToList());
-
-			MicrophoneDevicesDropdownOnValueChangedEventHandler(0);
+            RefreshMicsButtonOnClickHandler();
         }
 
-		private void MicrophoneDevicesDropdownOnValueChangedEventHandler(int value)
-		{
-			if (!_speechRecognition.HasConnectedMicrophoneDevices())
-				return;
-			_speechRecognition.SetMicrophoneDevice(_speechRecognition.GetMicrophoneDevices()[value]);
-		}
+        private void OnDestroy()
+        {
+            _speechRecognition.RecognizeSuccessEvent -= RecognizeSuccessEventHandler;
+            _speechRecognition.RecognizeFailedEvent -= RecognizeFailedEventHandler;
+            _speechRecognition.LongRunningRecognizeSuccessEvent -= LongRunningRecognizeSuccessEventHandler;
+            _speechRecognition.LongRunningRecognizeFailedEvent -= LongRunningRecognizeFailedEventHandler;
+            _speechRecognition.GetOperationSuccessEvent -= GetOperationSuccessEventHandler;
+            _speechRecognition.GetOperationFailedEvent -= GetOperationFailedEventHandler;
+            _speechRecognition.ListOperationsSuccessEvent -= ListOperationsSuccessEventHandler;
+            _speechRecognition.ListOperationsFailedEvent -= ListOperationsFailedEventHandler;
 
-		private void StartRecordButtonOnClickHandler()
-		{
-			_startRecordButton.interactable = false;
-			_stopRecordButton.interactable = true;
-			_detectThresholdButton.interactable = false;
-			_resultText.text = string.Empty;
+            _speechRecognition.FinishedRecordEvent -= FinishedRecordEventHandler;
+            _speechRecognition.StartedRecordEvent -= StartedRecordEventHandler;
+            _speechRecognition.RecordFailedEvent -= RecordFailedEventHandler;
 
-			_speechRecognition.StartRecord(_voiceDetectionToggle.isOn);
-		}
+            _speechRecognition.EndTalkigEvent -= EndTalkigEventHandler;
+        }
 
-		private void StopRecordButtonOnClickHandler()
-		{
-			_stopRecordButton.interactable = false;
-			_startRecordButton.interactable = true;
-			_detectThresholdButton.interactable = true;
+        private void Update()
+        {
+            if (_speechRecognition.IsRecording)
+            {
+                if (_speechRecognition.GetMaxFrame() > 0)
+                {
+                    float max = (float)_speechRecognition.configs[_speechRecognition.currentConfigIndex].voiceDetectionThreshold;
+                    float current = _speechRecognition.GetLastFrame() / max;
 
-			_speechRecognition.StopRecord();
-		}
+                    if (current >= 1f)
+                    {
+                        _voiceLevelImage.fillAmount = Mathf.Lerp(_voiceLevelImage.fillAmount, Mathf.Clamp(current / 2f, 0, 1f), 30 * Time.deltaTime);
+                    }
+                    else
+                    {
+                        _voiceLevelImage.fillAmount = Mathf.Lerp(_voiceLevelImage.fillAmount, Mathf.Clamp(current / 2f, 0, 0.5f), 30 * Time.deltaTime);
+                    }
 
-		private void GetOperationButtonOnClickHandler()
-		{
-			if(string.IsNullOrEmpty(_operationIdInputField.text))
-			{
-				_resultText.text = "<color=red>Operatinon name is empty</color>";
-				return;
-			}
+                    _voiceLevelImage.color = current >= 1f ? Color.green : Color.red;
+                }
+            }
+            else
+            {
+                _voiceLevelImage.fillAmount = 0f;
+            }
+        }
 
-			_speechRecognition.GetOperation(_operationIdInputField.text);
-		}
+        private void RefreshMicsButtonOnClickHandler()
+        {
+            _speechRecognition.RequestMicrophonePermission(null);
 
-		private void GetListOperationsButtonOnClickHandler()
-		{
-			// some parameters could be seted
-			_speechRecognition.GetListOperations();
-		}
+            _microphoneDevicesDropdown.ClearOptions();
+            _microphoneDevicesDropdown.AddOptions(_speechRecognition.GetMicrophoneDevices().ToList());
 
-		private void DetectThresholdButtonOnClickHandler()
-		{
-			_speechRecognition.DetectThreshold();
-		}
+            MicrophoneDevicesDropdownOnValueChangedEventHandler(0);
+        }
 
-		private void CancelAllRequetsButtonOnClickHandler()
-		{
-			_speechRecognition.CancelAllRequests();
-		}
+        private void MicrophoneDevicesDropdownOnValueChangedEventHandler(int value)
+        {
+            if (!_speechRecognition.HasConnectedMicrophoneDevices())
+                return;
+            _speechRecognition.SetMicrophoneDevice(_speechRecognition.GetMicrophoneDevices()[value]);
+        }
 
-		private void RecognizeButtonOnClickHandler()
-		{
-			if (_speechRecognition.LastRecordedClip == null)
-			{
-				_resultText.text = "<color=red>No Record found</color>";
-				return;
-			}
+        private void StartRecordButtonOnClickHandler()
+        {
+            _startRecordButton.interactable = false;
+            _stopRecordButton.interactable = true;
+            _detectThresholdButton.interactable = false;
+            _resultText.text = string.Empty;
 
-			FinishedRecordEventHandler(_speechRecognition.LastRecordedClip, _speechRecognition.LastRecordedRaw);
-		}
+            _speechRecognition.StartRecord(_voiceDetectionToggle.isOn);
+        }
 
-		private void StartedRecordEventHandler()
-		{
-			_speechRecognitionState.color = Color.red;
-		}
+        private void StopRecordButtonOnClickHandler()
+        {
+            _stopRecordButton.interactable = false;
+            _startRecordButton.interactable = true;
+            _detectThresholdButton.interactable = true;
 
-		private void RecordFailedEventHandler()
-		{
-			_speechRecognitionState.color = Color.yellow;
-			_resultText.text = "<color=red>Start record Failed. Please check microphone device and try again.</color>";
+            _speechRecognition.StopRecord();
+        }
 
-			_stopRecordButton.interactable = false;
-			_startRecordButton.interactable = true;
-		}
+        private void GetOperationButtonOnClickHandler()
+        {
+            if (string.IsNullOrEmpty(_operationIdInputField.text))
+            {
+                _resultText.text = "<color=red>Operatinon name is empty</color>";
+                return;
+            }
 
-		private void BeginTalkigEventHandler()
-		{
-			_resultText.text = "<color=blue>Talk Began.</color>";
-		}
+            _speechRecognition.GetOperation(_operationIdInputField.text);
+        }
 
-		private void EndTalkigEventHandler(AudioClip clip, float[] raw)
-		{
-			_resultText.text += "\n<color=blue>Talk Ended.</color>";
+        private void GetListOperationsButtonOnClickHandler()
+        {
+            // some parameters could be seted
+            _speechRecognition.GetListOperations();
+        }
 
-			FinishedRecordEventHandler(clip, raw);
-		}
+        private void DetectThresholdButtonOnClickHandler()
+        {
+            _speechRecognition.DetectThreshold();
+        }
 
-		private void FinishedRecordEventHandler(AudioClip clip, float[] raw)
-		{
-			
-			if (!_voiceDetectionToggle.isOn && _startRecordButton.interactable)
-			{
-				_speechRecognitionState.color = Color.yellow;
-			}
+        private void CancelAllRequetsButtonOnClickHandler()
+        {
+            _speechRecognition.CancelAllRequests();
+        }
 
-			if (clip == null || !_recognizeDirectlyToggle.isOn)
-				return;
+        private void RecognizeButtonOnClickHandler()
+        {
+            if (_speechRecognition.LastRecordedClip == null)
+            {
+                _resultText.text = "<color=red>No Record found</color>";
+                return;
+            }
 
-			RecognitionConfig config = RecognitionConfig.GetDefault();
+            FinishedRecordEventHandler(_speechRecognition.LastRecordedClip, _speechRecognition.LastRecordedRaw);
+        }
 
-			config.languageCode = "ko-KR";  // Set language to Korean
-			//config.languageCode = ((Enumerators.LanguageCode)_languageDropdown.value).Parse();
-			config.speechContexts = new SpeechContext[]
-			{
-				new SpeechContext()
-				{
-					phrases = _contextPhrasesInputField.text.Replace(" ", string.Empty).Split(',')
-				}
-			};
-			config.audioChannelCount = clip.channels;
-			// configure other parameters of the config if need
+        private void StartedRecordEventHandler()
+        {
+            _speechRecognitionState.color = Color.red;
+        }
 
-			GeneralRecognitionRequest recognitionRequest;
+        private void RecordFailedEventHandler()
+        {
+            _speechRecognitionState.color = Color.yellow;
+            _resultText.text = "<color=red>Start record Failed. Please check microphone device and try again.</color>";
 
-			if (_longRunningRecognizeToggle.isOn)
-			{
+            _stopRecordButton.interactable = false;
+            _startRecordButton.interactable = true;
+        }
+
+        private void BeginTalkigEventHandler()
+        {
+            _resultText.text = "<color=blue>Talk Began.</color>";
+        }
+
+        private void EndTalkigEventHandler(AudioClip clip, float[] raw)
+        {
+            _resultText.text += "\n<color=blue>Talk Ended.</color>";
+
+            FinishedRecordEventHandler(clip, raw);
+        }
+
+        private void FinishedRecordEventHandler(AudioClip clip, float[] raw)
+        {
+
+            if (!_voiceDetectionToggle.isOn && _startRecordButton.interactable)
+            {
+                _speechRecognitionState.color = Color.yellow;
+            }
+
+            if (clip == null || !_recognizeDirectlyToggle.isOn)
+                return;
+
+            RecognitionConfig config = RecognitionConfig.GetDefault();
+
+            config.languageCode = "ko-KR";  // Set language to Korean
+                                            //config.languageCode = ((Enumerators.LanguageCode)_languageDropdown.value).Parse();
+            config.speechContexts = new SpeechContext[]
+            {
+            new SpeechContext()
+            {
+               phrases = _contextPhrasesInputField.text.Replace(" ", string.Empty).Split(',')
+            }
+            };
+            config.audioChannelCount = clip.channels;
+            // configure other parameters of the config if need
+
+            GeneralRecognitionRequest recognitionRequest;
+
+            if (_longRunningRecognizeToggle.isOn)
+            {
                 recognitionRequest = new LongRunningRecognitionRequest();
             }
             else
@@ -333,176 +363,176 @@ public static class HangulDecomposer
                 recognitionRequest = new GeneralRecognitionRequest();
             }
 
-			recognitionRequest.audio = new RecognitionAudioContent() // for base64 data
+            recognitionRequest.audio = new RecognitionAudioContent() // for base64 data
             {
-				content = raw.ToBase64(channels: clip.channels)
-			};
-			//recognitionRequest.audio = new RecognitionAudioUri() // for Google Cloud Storage object
-			//{
-			//	uri = "gs://bucketName/object_name"
-			//};
-			recognitionRequest.config = config;
+                content = raw.ToBase64(channels: clip.channels)
+            };
+            //recognitionRequest.audio = new RecognitionAudioUri() // for Google Cloud Storage object
+            //{
+            //   uri = "gs://bucketName/object_name"
+            //};
+            recognitionRequest.config = config;
 
-			if (_longRunningRecognizeToggle.isOn)
-			{
-				_speechRecognition.LongRunningRecognize(recognitionRequest);
-			}
-			else
-			{
-				_speechRecognition.Recognize(recognitionRequest);
-			}
-		}
+            if (_longRunningRecognizeToggle.isOn)
+            {
+                _speechRecognition.LongRunningRecognize(recognitionRequest);
+            }
+            else
+            {
+                _speechRecognition.Recognize(recognitionRequest);
+            }
+        }
 
-		private void GetOperationFailedEventHandler(string error)
-		{
-			_resultText.text = "Get Operation Failed: " + error;
-		}
+        private void GetOperationFailedEventHandler(string error)
+        {
+            _resultText.text = "Get Operation Failed: " + error;
+        }
 
-		private void ListOperationsFailedEventHandler(string error)
-		{
-			_resultText.text = "List Operations Failed: " + error;
-		}
+        private void ListOperationsFailedEventHandler(string error)
+        {
+            _resultText.text = "List Operations Failed: " + error;
+        }
 
-		private void RecognizeFailedEventHandler(string error)
+        private void RecognizeFailedEventHandler(string error)
         {
             _resultText.text = "Recognize Failed: " + error;
         }
 
-		private void LongRunningRecognizeFailedEventHandler(string error)
-		{
-			_resultText.text = "Long Running Recognize Failed: " + error;
-		}
+        private void LongRunningRecognizeFailedEventHandler(string error)
+        {
+            _resultText.text = "Long Running Recognize Failed: " + error;
+        }
 
-		private void ListOperationsSuccessEventHandler(ListOperationsResponse operationsResponse)
-		{
-			_resultText.text = "List Operations Success.\n";
+        private void ListOperationsSuccessEventHandler(ListOperationsResponse operationsResponse)
+        {
+            _resultText.text = "List Operations Success.\n";
 
-			if (operationsResponse.operations != null)
-			{
-				_resultText.text += "Operations:\n";
+            if (operationsResponse.operations != null)
+            {
+                _resultText.text += "Operations:\n";
 
-				foreach (var item in operationsResponse.operations)
-				{
-					_resultText.text += "name: " + item.name + ";\n";
+                foreach (var item in operationsResponse.operations)
+                {
+                    _resultText.text += "name: " + item.name + ";\n";
                 }
-			}
-		}
-		
+            }
+        }
 
-		private void GetOperationSuccessEventHandler(Operation operation)
-		{
-			_resultText.text = "Get Operation Success.\n";
-			_resultText.text += "name: " + operation.name + "; done: " + operation.done;
+
+        private void GetOperationSuccessEventHandler(Operation operation)
+        {
+            _resultText.text = "Get Operation Success.\n";
+            _resultText.text += "name: " + operation.name + "; done: " + operation.done;
 
             if (operation.done && (operation.error == null || string.IsNullOrEmpty(operation.error.message)))
-			{
-				InsertRecognitionResponseInfo(operation.response);
-			}		
-		}
+            {
+                InsertRecognitionResponseInfo(operation.response);
+            }
+        }
 
-		//here!
-		private void RecognizeSuccessEventHandler(RecognitionResponse recognitionResponse)
+        //here!
+        private void RecognizeSuccessEventHandler(RecognitionResponse recognitionResponse)
         {
-			_resultText.text = "Recognize Success.\n";
-			InsertRecognitionResponseInfo(recognitionResponse);
-			_resultText.text += "\n";			
-			string transcript = recognitionResponse.results[0].alternatives[0].transcript;
+            _resultText.text = "Recognize Success.\n";
+            InsertRecognitionResponseInfo(recognitionResponse);
+            _resultText.text += "\n";
+            string transcript = recognitionResponse.results[0].alternatives[0].transcript;
 
-			// Display Korean Break
-			_resultText.text += "\nKorean Break:\n";
+            // Display Korean Break
+            _resultText.text += "\nKorean Break:\n";
             _resultText.text += HangulDecomposer.DecomposeHangul(transcript);
 
-			// Extract the user name
-			string namePrefix = "내 이름은 ";
-			string nameSuffix = "입니다";
-			string name = transcript.Substring(namePrefix.Length, transcript.Length - namePrefix.Length - nameSuffix.Length - 1);
+            // Extract the user name
+            string namePrefix = "내 이름은 ";
+            string nameSuffix = "입니다";
+            string name = transcript.Substring(namePrefix.Length, transcript.Length - namePrefix.Length - nameSuffix.Length - 1);
 
-			// Display the user name
-			string UserName = name;
-			_resultText.text += "\n\nUser name:\n " + UserName;
+            // Display the user name
+            string UserName = name;
+            _resultText.text += "\n\nUser name:\n " + UserName;
 
-			// Display Korean Break the user name
-			string BreakUserName = HangulDecomposer.DecomposeHangul(name);
-			_resultText.text += "\n\n ID of the User name:\n " + BreakUserName;
-			
+            // Display Korean Break the user name
+            string BreakUserName = HangulDecomposer.DecomposeHangul(name);
+            _resultText.text += "\n\n ID of the User name:\n " + BreakUserName;
+
 
         }
 
         private void LongRunningRecognizeSuccessEventHandler(Operation operation)
         {
-			if (operation.error != null && !string.IsNullOrEmpty(operation.error.message))
-			{
+            if (operation.error != null && !string.IsNullOrEmpty(operation.error.message))
+            {
                 _resultText.text = "Long Running Recognize Failed: " + operation.error.message + "; operation: " + operation.name;
                 return;
-			}
+            }
 
-			_resultText.text = "Long Running Recognize Success.\n Operation name: " + operation.name;
+            _resultText.text = "Long Running Recognize Success.\n Operation name: " + operation.name;
 
-			if (operation.done)
-			{
-				if (operation.response != null && operation.response.results.Length > 0)
-				{
-					_resultText.text = "Long Running Recognize Success.";
-					_resultText.text += "\n" + operation.response.results[0].alternatives[0].transcript;
+            if (operation.done)
+            {
+                if (operation.response != null && operation.response.results.Length > 0)
+                {
+                    _resultText.text = "Long Running Recognize Success.";
+                    _resultText.text += "\n" + operation.response.results[0].alternatives[0].transcript;
 
-					string other = "\nDetected alternatives:\n";
+                    string other = "\nDetected alternatives:\n";
 
-					foreach (var result in operation.response.results)
-					{
-						foreach (var alternative in result.alternatives)
-						{
-							if (operation.response.results[0].alternatives[0] != alternative)
-							{
-								other += alternative.transcript + ", ";
-							}
-						}
-					}
+                    foreach (var result in operation.response.results)
+                    {
+                        foreach (var alternative in result.alternatives)
+                        {
+                            if (operation.response.results[0].alternatives[0] != alternative)
+                            {
+                                other += alternative.transcript + ", ";
+                            }
+                        }
+                    }
 
-					_resultText.text += other;
-				}
-			}
+                    _resultText.text += other;
+                }
+            }
         }
 
-		private void InsertRecognitionResponseInfo(RecognitionResponse recognitionResponse)
-		{
-			if (recognitionResponse == null || recognitionResponse.results.Length == 0)
-			{
-				_resultText.text += "\nWords not detected.";
-				return;
-			}
+        private void InsertRecognitionResponseInfo(RecognitionResponse recognitionResponse)
+        {
+            if (recognitionResponse == null || recognitionResponse.results.Length == 0)
+            {
+                _resultText.text += "\nWords not detected.";
+                return;
+            }
 
-			//showing text
-			_resultText.text += "\n" + recognitionResponse.results[0].alternatives[0].transcript;
+            //showing text
+            _resultText.text += "\n" + recognitionResponse.results[0].alternatives[0].transcript;
 
-			var words = recognitionResponse.results[0].alternatives[0].words;
+            var words = recognitionResponse.results[0].alternatives[0].words;
 
-			if (words != null)
-			{
-				string times = string.Empty;
+            if (words != null)
+            {
+                string times = string.Empty;
 
-				foreach (var item in recognitionResponse.results[0].alternatives[0].words)
-				{
-					times += "<color=green>" + item.word + "</color> -  start: " + item.startTime + "; end: " + item.endTime + "\n";
-				}
+                foreach (var item in recognitionResponse.results[0].alternatives[0].words)
+                {
+                    times += "<color=green>" + item.word + "</color> -  start: " + item.startTime + "; end: " + item.endTime + "\n";
+                }
 
-				_resultText.text += "\n" + times;
-			}
+                _resultText.text += "\n" + times;
+            }
 
-			string other = "\nDetected alternatives: ";
+            string other = "\nDetected alternatives: ";
 
-			foreach (var result in recognitionResponse.results)
-			{
-				foreach (var alternative in result.alternatives)
-				{
-					if (recognitionResponse.results[0].alternatives[0] != alternative)
-					{
-						other += alternative.transcript + ", ";
-					}
-				}
-			}
+            foreach (var result in recognitionResponse.results)
+            {
+                foreach (var alternative in result.alternatives)
+                {
+                    if (recognitionResponse.results[0].alternatives[0] != alternative)
+                    {
+                        other += alternative.transcript + ", ";
+                    }
+                }
+            }
 
-			_resultText.text += other;
-		}
+            _resultText.text += other;
+        }
 
 
 
