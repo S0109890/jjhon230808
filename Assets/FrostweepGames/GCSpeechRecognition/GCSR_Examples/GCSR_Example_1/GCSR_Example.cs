@@ -84,6 +84,21 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
 
     public class GCSR_Example : MonoBehaviour
     {
+        //sm_singletone
+        public static GCSR_Example Instance { get; private set; }
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
         private GCSpeechRecognition _speechRecognition;
 
         private Button _startRecordButton,
@@ -244,8 +259,9 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _speechRecognition.SetMicrophoneDevice(_speechRecognition.GetMicrophoneDevices()[value]);
         }
 
-        private void StartRecordButtonOnClickHandler()
+        public void StartRecordButtonOnClickHandler()
         {
+            //sm_start
             _startRecordButton.interactable = false;
             _stopRecordButton.interactable = true;
             _detectThresholdButton.interactable = false;
@@ -254,8 +270,9 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _speechRecognition.StartRecord(_voiceDetectionToggle.isOn);
         }
 
-        private void StopRecordButtonOnClickHandler()
+        public void StopRecordButtonOnClickHandler()
         {
+            //sm_stop
             _stopRecordButton.interactable = false;
             _startRecordButton.interactable = true;
             _detectThresholdButton.interactable = true;
@@ -452,6 +469,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _resultText.text += "\n\nUser name:\n " + UserName;
 
             // Display Korean Break the user name
+            //SM result _ BreakUserName
             string BreakUserName = HangulDecomposer.DecomposeHangul(name);
             _resultText.text += "\n\n ID of the User name:\n " + BreakUserName;
 
@@ -493,6 +511,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             }
         }
 
+
         private void InsertRecognitionResponseInfo(RecognitionResponse recognitionResponse)
         {
             if (recognitionResponse == null || recognitionResponse.results.Length == 0)
@@ -501,7 +520,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
                 return;
             }
 
-            //showing text
+            //showing text 
             _resultText.text += "\n" + recognitionResponse.results[0].alternatives[0].transcript;
 
             var words = recognitionResponse.results[0].alternatives[0].words;
@@ -530,13 +549,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
                     }
                 }
             }
-
             _resultText.text += other;
         }
-
-
-
-
-
     }
 }
