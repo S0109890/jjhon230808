@@ -242,6 +242,8 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             }
         }
 
+        //sm device
+        public int deviceNum=0;
         private void RefreshMicsButtonOnClickHandler()
         {
             _speechRecognition.RequestMicrophonePermission(null);
@@ -249,11 +251,12 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _microphoneDevicesDropdown.ClearOptions();
             _microphoneDevicesDropdown.AddOptions(_speechRecognition.GetMicrophoneDevices().ToList());
 
-            MicrophoneDevicesDropdownOnValueChangedEventHandler(0);
+            MicrophoneDevicesDropdownOnValueChangedEventHandler(deviceNum);
         }
 
         private void MicrophoneDevicesDropdownOnValueChangedEventHandler(int value)
         {
+            //SM_MIC INPUT
             if (!_speechRecognition.HasConnectedMicrophoneDevices())
                 return;
             _speechRecognition.SetMicrophoneDevice(_speechRecognition.GetMicrophoneDevices()[value]);
@@ -268,6 +271,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _resultText.text = string.Empty;
 
             _speechRecognition.StartRecord(_voiceDetectionToggle.isOn);
+            print("gurwls_code_start!!");
         }
 
         public void StopRecordButtonOnClickHandler()
@@ -278,6 +282,8 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             _detectThresholdButton.interactable = true;
 
             _speechRecognition.StopRecord();
+            print("gurwls_code_stop!!!!!!!");
+
         }
 
         private void GetOperationButtonOnClickHandler()
@@ -447,10 +453,41 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             }
         }
 
+        ////here!
+        //private void RecognizeSuccessEventHandler(RecognitionResponse recognitionResponse)
+        //{
+        //    _resultText.text = "Recognize Success.\n";
+        //    InsertRecognitionResponseInfo(recognitionResponse);
+        //    _resultText.text += "\n";
+        //    string transcript = recognitionResponse.results[0].alternatives[0].transcript;
+
+        //    // Display Korean Break
+        //    _resultText.text += "\nKorean Break:\n";
+        //    _resultText.text += HangulDecomposer.DecomposeHangul(transcript);
+
+        //    // Extract the user name
+        //    string namePrefix = "내 이름은 ";
+        //    string nameSuffix = "입니다";
+        //    string name = transcript.Substring(namePrefix.Length, transcript.Length - namePrefix.Length - nameSuffix.Length - 1);
+
+        //    // Display the user name
+        //    string UserName = name;
+        //    _resultText.text += "\n\nUser name:\n " + UserName;
+
+        //    // Display Korean Break the user name
+        //    //SM result _ BreakUserName
+        //    string BreakUserName = HangulDecomposer.DecomposeHangul(name);
+        //    _resultText.text += "\n\n ID of the User name:\n " + BreakUserName;
+        //    print("########result" + BreakUserName);
+
+
+        //}
         //here!
+        public string BreakUserName;
         private void RecognizeSuccessEventHandler(RecognitionResponse recognitionResponse)
         {
             _resultText.text = "Recognize Success.\n";
+            print("resultsuccess");
             InsertRecognitionResponseInfo(recognitionResponse);
             _resultText.text += "\n";
             string transcript = recognitionResponse.results[0].alternatives[0].transcript;
@@ -464,14 +501,17 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
             string nameSuffix = "입니다";
             string name = transcript.Substring(namePrefix.Length, transcript.Length - namePrefix.Length - nameSuffix.Length - 1);
 
+            //여기다
             // Display the user name
             string UserName = name;
             _resultText.text += "\n\nUser name:\n " + UserName;
 
             // Display Korean Break the user name
             //SM result _ BreakUserName
-            string BreakUserName = HangulDecomposer.DecomposeHangul(name);
+            BreakUserName = HangulDecomposer.DecomposeHangul(name);
             _resultText.text += "\n\n ID of the User name:\n " + BreakUserName;
+
+            print("########result" + BreakUserName);
 
 
         }
@@ -507,6 +547,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
                     }
 
                     _resultText.text += other;
+                    print("#######3");
                 }
             }
         }
@@ -550,6 +591,7 @@ namespace FrostweepGames.Plugins.GoogleCloud.SpeechRecognition.Examples
                 }
             }
             _resultText.text += other;
+
         }
     }
 }

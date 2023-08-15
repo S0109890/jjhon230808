@@ -6,32 +6,32 @@ using System.Collections.Generic;
 public class SliderController : MonoBehaviour
 {
     public Slider slider; // Inspector에서 할당할 슬라이더
-    private float duration = 10f; // 애니메이션 지속 시간 (초)
+    public float duration = 50f; // 애니메이션 지속 시간 (초)
     private float elapsedTime = 0f;
 
-    void Start()
+    private void OnEnable()
     {
-        // 시작 시 슬라이더의 값을 최대로 설정
-        slider.value = slider.maxValue;
-
-        // 10초 동안 슬라이더 값을 줄이는 코루틴 시작
-        StartCoroutine(ReduceSliderValue());
+        StartCoroutine(CountDown());
+        print("countdown_start");
     }
 
-    private IEnumerator ReduceSliderValue()
+    public IEnumerator CountDown()
     {
+        // Set the slider's value to its maximum at the start
+        slider.value = slider.maxValue;
+
         while (elapsedTime < duration)
         {
-            // 경과 시간 업데이트
+            // update elapsed time
             elapsedTime += Time.deltaTime;
 
-            // 슬라이더 값 계산
+            // Calculate the slider value
             float newValue = Mathf.Lerp(slider.maxValue, slider.minValue, elapsedTime / duration);
 
-            // 슬라이더 값 설정
+            // set the slider value
             slider.value = newValue;
 
-            yield return null;
+            yield return null; // wait for the next frame
         }
     }
 }
